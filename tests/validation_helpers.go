@@ -15,6 +15,7 @@ func checkValidateMethodExists(code, structName string) bool {
 func checkRequiredFieldValidation(code, fieldName string) bool {
 	patterns := []string{
 		`if\s+r\.` + regexp.QuoteMeta(fieldName) + `\s+==\s+nil`,
+		`if\s+r\.` + regexp.QuoteMeta(fieldName) + `\s+==\s+emptyString`,
 		`if\s+r\.` + regexp.QuoteMeta(fieldName) + `\s+==\s+""`,
 		`if\s+r\.` + regexp.QuoteMeta(fieldName) + `\s+==\s+0`,
 		`if\s+len\(r\.` + regexp.QuoteMeta(fieldName) + `\)\s+<\s+\d+`,

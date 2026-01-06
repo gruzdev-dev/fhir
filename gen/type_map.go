@@ -50,8 +50,10 @@ func (g *Generator) mapGoType(el ElementDefinition) string {
 					return "string"
 				case "Boolean":
 					return "bool"
-				case "Integer", "Integer64":
+				case "Integer":
 					return "int"
+				case "Integer64", "Long":
+					return "int64"
 				case "Decimal":
 					return "float64"
 				case "Date", "DateTime", "Time":

@@ -358,7 +358,8 @@ func TestWriteValidateMethod_RequiredFields(t *testing.T) {
 				},
 			},
 			wantCode: []string{
-				"if r.RequiredString == \"\"",
+				"var emptyString string",
+				"if r.RequiredString == emptyString",
 				"field 'RequiredString' is required",
 			},
 		},
@@ -396,7 +397,9 @@ func TestWriteValidateMethod_MaxLength(t *testing.T) {
 
 	output := buf.String()
 	wantCode := []string{
-		"if r.StringField != nil && len(*r.StringField) > 100",
+		"var emptyString string",
+		"if r.StringField != nil",
+		"len(valStr) > 100",
 		"field 'StringField' exceeds maxLength 100",
 	}
 
