@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"fhir/tools/text"
+	"github.com/gruzdev-dev/fhir/tools/text"
 )
 
 type FieldInfo struct {

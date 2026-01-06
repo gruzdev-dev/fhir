@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"fhir/tools/text"
+	"github.com/gruzdev-dev/fhir/tools/text"
 )
 
 type Generator struct {

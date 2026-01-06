@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"fhir/tools/text"
+	"github.com/gruzdev-dev/fhir/tools/text"
 )
 
 func (g *Generator) WriteResource(def StructureDefinition) error {

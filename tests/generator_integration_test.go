@@ -8,7 +8,7 @@ import (
 	"testing"
 	"unicode"
 
-	"fhir/gen"
+	"github.com/gruzdev-dev/fhir/gen"
 )
 
 func toSnakeCase(s string) string {

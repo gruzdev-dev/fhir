@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fhir/gen"
+	"github.com/gruzdev-dev/fhir/gen"
 	"log"
 )
 

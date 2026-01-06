@@ -3,7 +3,7 @@ package gen
 import (
 	"strings"
 
-	"fhir/tools/text"
+	"github.com/gruzdev-dev/fhir/tools/text"
 )
 
 func (g *Generator) mapGoType(el ElementDefinition) string {

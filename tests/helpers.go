@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"fhir/gen"
+	"github.com/gruzdev-dev/fhir/gen"
 )
 
 func loadTestSpec(name string) (gen.StructureDefinition, error) {

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"unicode"
 
-	"fhir/gen"
+	"github.com/gruzdev-dev/fhir/gen"
 )
 
 func TestValidation_RequiredFields(t *testing.T) {
