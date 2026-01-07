@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/gruzdev-dev/fhir/gen"
 	"log"
+
+	"github.com/gruzdev-dev/fhir/gen"
 )
 
 //go:generate go run generate.go
@@ -22,6 +23,11 @@ func main() {
 	log.Println("Generating clean Go models...")
 	if err := gen.Generate(); err != nil {
 		log.Fatal("Generation failed:", err)
+	}
+
+	log.Println("Generating ValueSet constants...")
+	if err := gen.GenerateValueSets(); err != nil {
+		log.Fatal("ValueSet generation failed:", err)
 	}
 
 	log.Println("Done! Check 'fhir' directory.")
