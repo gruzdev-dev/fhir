@@ -144,7 +144,7 @@ func (g *Generator) ProcessElements(name string, elements []ElementDefinition, d
 
 			if el.Max == "*" {
 				goType = "[]" + goType
-			} else if el.Min == 0 && !strings.HasPrefix(goType, "[]") && goType != "bool" && goType != "json.RawMessage" && goType != "any" {
+			} else if el.Min == 0 && !strings.HasPrefix(goType, "[]") && goType != "json.RawMessage" && goType != "any" {
 				goType = "*" + goType
 			} else if el.Min > 0 && !strings.HasPrefix(goType, "[]") {
 				isPrimitive := goType == "bool" || goType == "string" || goType == "int" || goType == "int64" || goType == "float64" || goType == "json.RawMessage" || goType == "any"
@@ -250,7 +250,7 @@ func (g *Generator) ProcessElements(name string, elements []ElementDefinition, d
 
 		if el.Max == "*" {
 			goType = "[]" + goType
-		} else if el.Min == 0 && !strings.HasPrefix(goType, "[]") && goType != "bool" && goType != "json.RawMessage" && goType != "any" {
+		} else if el.Min == 0 && !strings.HasPrefix(goType, "[]") && goType != "json.RawMessage" && goType != "any" {
 			goType = "*" + goType
 		} else if el.Min > 0 && !strings.HasPrefix(goType, "[]") {
 			isPrimitive := goType == "bool" || goType == "string" || goType == "int" || goType == "int64" || goType == "float64" || goType == "json.RawMessage" || goType == "any"
