@@ -103,7 +103,11 @@ func TestProcessElements_RequiredFields(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewGenerator("", "")
-			structs := g.ProcessElements("TestResource", tt.elements)
+			def := StructureDefinition{
+				Name: "TestResource",
+				Kind: "resource",
+			}
+			structs := g.ProcessElements("TestResource", tt.elements, def)
 
 			for structName, expected := range tt.want {
 				fields, ok := structs[structName]
@@ -184,7 +188,11 @@ func TestProcessElements_ChoiceTypes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewGenerator("", "")
-			structs := g.ProcessElements("TestResource", tt.elements)
+			def := StructureDefinition{
+				Name: "TestResource",
+				Kind: "resource",
+			}
+			structs := g.ProcessElements("TestResource", tt.elements, def)
 
 			fields, ok := structs["TestResource"]
 			if !ok {
@@ -252,7 +260,11 @@ func TestProcessElements_ChoiceTypesJSONTags(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewGenerator("", "")
-			structs := g.ProcessElements("TestResource", tt.elements)
+			def := StructureDefinition{
+				Name: "TestResource",
+				Kind: "resource",
+			}
+			structs := g.ProcessElements("TestResource", tt.elements, def)
 
 			fields, ok := structs["TestResource"]
 			if !ok {
@@ -310,7 +322,11 @@ func TestProcessElements_EmptyStructures(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewGenerator("", "")
-			structs := g.ProcessElements("TestResource", tt.elements)
+			def := StructureDefinition{
+				Name: "TestResource",
+				Kind: "resource",
+			}
+			structs := g.ProcessElements("TestResource", tt.elements, def)
 
 			fields, exists := structs[tt.wantEmptyStruct]
 			if tt.shouldExist && !exists {
@@ -382,7 +398,11 @@ func TestProcessElements_NestedStructures(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewGenerator("", "")
-			structs := g.ProcessElements("TestResource", tt.elements)
+			def := StructureDefinition{
+				Name: "TestResource",
+				Kind: "resource",
+			}
+			structs := g.ProcessElements("TestResource", tt.elements, def)
 
 			for _, wantStruct := range tt.want {
 				if _, ok := structs[wantStruct]; !ok {
@@ -468,7 +488,11 @@ func TestProcessElements_SkipElements(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewGenerator("", "")
-			structs := g.ProcessElements("TestResource", tt.elements)
+			def := StructureDefinition{
+				Name: "TestResource",
+				Kind: "resource",
+			}
+			structs := g.ProcessElements("TestResource", tt.elements, def)
 
 			if tt.shouldHaveStruct {
 				fields, ok := structs["TestResource"]
@@ -562,7 +586,11 @@ func TestProcessElements_RequiredReferencePointer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewGenerator("", "")
-			structs := g.ProcessElements("TestResource", tt.elements)
+			def := StructureDefinition{
+				Name: "TestResource",
+				Kind: "resource",
+			}
+			structs := g.ProcessElements("TestResource", tt.elements, def)
 
 			fields, ok := structs["TestResource"]
 			if !ok {
@@ -651,7 +679,11 @@ func TestProcessElements_ContentReference(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewGenerator("", "")
-			structs := g.ProcessElements("TestResource", tt.elements)
+			def := StructureDefinition{
+				Name: "TestResource",
+				Kind: "resource",
+			}
+			structs := g.ProcessElements("TestResource", tt.elements, def)
 
 			fields, ok := structs[tt.want.structName]
 			if !ok {

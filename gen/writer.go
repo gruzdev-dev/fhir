@@ -15,7 +15,12 @@ import (
 func (g *Generator) WriteResource(def StructureDefinition) error {
 	var buf bytes.Buffer
 
-	structMap := g.ProcessElements(def.Name, def.Snapshot.Element)
+	actualName := def.Name
+	if def.Kind == "primitive-type" && needsFHIRPrefix(def.Name) {
+		actualName = getFHIRTypeName(def.Name)
+	}
+
+	structMap := g.ProcessElements(actualName, def.Snapshot.Element, def)
 
 	needsJSON := false
 	needsRegexp := false
@@ -63,12 +68,9 @@ func (g *Generator) WriteResource(def StructureDefinition) error {
 
 	for usedType := range usedTypesInFile {
 		if _, exists := structMap[usedType]; !exists {
-			// Skip if type is defined in another file (will be generated separately)
 			if _, defined := g.Definitions[usedType]; defined {
 				continue
 			}
-			// Skip if this type is the base type of the current definition
-			// (e.g., Quantity is base of MoneyQuantity, so don't create Quantity in MoneyQuantity file)
 			if def.BaseDefinition != "" {
 				baseTypeName := extractBaseTypeName(def.BaseDefinition)
 				if baseTypeName == usedType {
@@ -79,18 +81,16 @@ func (g *Generator) WriteResource(def StructureDefinition) error {
 		}
 	}
 
-	g.writeStruct(&buf, def.Name, def.Description, structMap[def.Name])
-	g.writeValidateMethod(&buf, def.Name, structMap[def.Name], structMap)
+	g.writeStruct(&buf, actualName, def.Description, structMap[actualName])
+	g.writeValidateMethod(&buf, actualName, structMap[actualName], structMap)
 
 	for sName, fields := range structMap {
-		if sName == def.Name {
+		if sName == actualName {
 			continue
 		}
-		// Skip types that are defined in other files (will be generated separately)
 		if _, defined := g.Definitions[sName]; defined {
 			continue
 		}
-		// Skip if this type is the base type of the current definition
 		if def.BaseDefinition != "" {
 			baseTypeName := extractBaseTypeName(def.BaseDefinition)
 			if baseTypeName == sName {
@@ -108,7 +108,7 @@ func (g *Generator) WriteResource(def StructureDefinition) error {
 		return fmt.Errorf("format error for %s at line %s: %w. Check debug_failed.go", def.Name, lineNum, err)
 	}
 
-	fileName := text.ToSnakeCase(def.Name) + ".go"
+	fileName := text.ToSnakeCase(actualName) + ".go"
 	return os.WriteFile(filepath.Join(g.OutputPath, fileName), formatted, 0644)
 }
 
@@ -198,13 +198,10 @@ func extractBaseType(goType string) string {
 	return res
 }
 
-// extractBaseTypeName extracts the type name from a BaseDefinition URL.
-// e.g., "http://hl7.org/fhir/StructureDefinition/Quantity" -> "Quantity"
 func extractBaseTypeName(baseDef string) string {
 	if baseDef == "" {
 		return ""
 	}
-	// BaseDefinition is typically a URL like "http://hl7.org/fhir/StructureDefinition/Quantity"
 	parts := strings.Split(baseDef, "/")
 	if len(parts) > 0 {
 		return parts[len(parts)-1]
@@ -281,8 +278,6 @@ func (g *Generator) writeValidateMethod(buf *bytes.Buffer, structName string, fi
 		return
 	}
 
-	// Track if we've declared emptyString variable (declare it on first use)
-	// It's needed for: required non-pointer strings, MaxLength, and Pattern validations for non-pointer strings
 	emptyStringDeclared := false
 
 	for _, f := range fields {
@@ -311,7 +306,6 @@ func (g *Generator) writeValidateMethod(buf *bytes.Buffer, structName string, fi
 						fmt.Fprintf(buf, "\t\treturn fmt.Errorf(\"field '%s' is required\")\n", f.Name)
 						fmt.Fprintf(buf, "\t}\n")
 					} else {
-						// Use emptyString variable to avoid conflicts with custom types named like the field
 						if !emptyStringDeclared {
 							fmt.Fprintf(buf, "\tvar emptyString string\n")
 							emptyStringDeclared = true
@@ -321,7 +315,6 @@ func (g *Generator) writeValidateMethod(buf *bytes.Buffer, structName string, fi
 						fmt.Fprintf(buf, "\t}\n")
 					}
 				} else if baseType == "bool" {
-					// bool fields are never required (they have a default value of false)
 				} else {
 					if isPointer {
 						fmt.Fprintf(buf, "\tif r.%s == nil {\n", f.Name)
@@ -343,7 +336,6 @@ func (g *Generator) writeValidateMethod(buf *bytes.Buffer, structName string, fi
 					emptyStringDeclared = true
 				}
 				fmt.Fprintf(buf, "\tif r.%s != nil {\n", f.Name)
-				// Compare with emptyString to get the underlying string value, then get length
 				fmt.Fprintf(buf, "\t\tvalStr := \"\"\n")
 				fmt.Fprintf(buf, "\t\tif *r.%s != emptyString {\n", f.Name)
 				fmt.Fprintf(buf, "\t\t\tvalStr = fmt.Sprint(*r.%s)\n", f.Name)
@@ -353,7 +345,6 @@ func (g *Generator) writeValidateMethod(buf *bytes.Buffer, structName string, fi
 				fmt.Fprintf(buf, "\t\t}\n")
 				fmt.Fprintf(buf, "\t}\n")
 			} else {
-				// Compare with emptyString to get the underlying string value, then get length
 				if !emptyStringDeclared {
 					fmt.Fprintf(buf, "\tvar emptyString string\n")
 					emptyStringDeclared = true
@@ -377,7 +368,6 @@ func (g *Generator) writeValidateMethod(buf *bytes.Buffer, structName string, fi
 				fmt.Fprintf(buf, "\t\t}\n")
 				fmt.Fprintf(buf, "\t}\n")
 			} else {
-				// Compare with emptyString to get the underlying string value, then match pattern
 				if !emptyStringDeclared {
 					fmt.Fprintf(buf, "\tvar emptyString string\n")
 					emptyStringDeclared = true

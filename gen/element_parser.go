@@ -21,16 +21,99 @@ type FieldInfo struct {
 	Path       string
 }
 
-func (g *Generator) ProcessElements(name string, elements []ElementDefinition) map[string][]FieldInfo {
+func (g *Generator) ProcessElements(name string, elements []ElementDefinition, def StructureDefinition) map[string][]FieldInfo {
 	structs := make(map[string][]FieldInfo)
 
+	isPrimitiveType := def.Kind == "primitive-type"
+	originalName := def.Name
+
 	for _, el := range elements {
-		if el.Path == name || strings.Contains(el.ID, "._") {
+		if isPrimitiveType && el.Path == originalName {
+		} else if el.Path == name || strings.Contains(el.ID, "._") {
+			continue
+		}
+
+		if isPrimitiveType && el.Path == originalName+".value" {
+			var valueType string
+			switch originalName {
+			case "string", "uri", "code", "id", "markdown", "canonical", "url", "base64Binary", "oid", "xhtml",
+				"date", "dateTime", "instant", "time", "uuid":
+				valueType = "*string"
+			case "boolean":
+				valueType = "*bool"
+			case "integer", "unsignedInt", "positiveInt":
+				valueType = "*int"
+			case "integer64":
+				valueType = "*int64"
+			case "decimal":
+				valueType = "*float64"
+			default:
+				continue
+			}
+
+			jsonTag := "`json:\"value\"`"
+			if el.Min == 0 {
+				jsonTag = "`json:\"value,omitempty\"`"
+			}
+			bsonTag := generateBSONTag("Value", el.Min == 0)
+
+			structs[name] = append(structs[name], FieldInfo{
+				Name:       "Value",
+				GoType:     valueType,
+				JSONTag:    jsonTag,
+				BSONTag:    bsonTag,
+				Comment:    el.Short,
+				Min:        el.Min,
+				MaxLength:  el.MaxLength,
+				Pattern:    el.Pattern,
+				Fixed:      el.Fixed,
+				IsRequired: el.Min > 0,
+				Path:       el.Path,
+			})
+			continue
+		}
+
+		if isPrimitiveType && el.Path == originalName+".id" {
+			jsonTag := "`json:\"id\"`"
+			if el.Min == 0 {
+				jsonTag = "`json:\"id,omitempty\"`"
+			}
+			bsonTag := generateBSONTag("Id", el.Min == 0)
+
+			structs[name] = append(structs[name], FieldInfo{
+				Name:       "Id",
+				GoType:     "*string",
+				JSONTag:    jsonTag,
+				BSONTag:    bsonTag,
+				Comment:    el.Short,
+				Min:        el.Min,
+				MaxLength:  el.MaxLength,
+				Pattern:    el.Pattern,
+				Fixed:      el.Fixed,
+				IsRequired: el.Min > 0,
+				Path:       el.Path,
+			})
 			continue
 		}
 
 		parts := strings.Split(el.Path, ".")
 		lastPart := parts[len(parts)-1]
+
+		if isPrimitiveType {
+			if lastPart == "id" || lastPart == "value" {
+				continue
+			}
+			lastPartLower := strings.ToLower(lastPart)
+			if needsFHIRPrefix(lastPart) || needsFHIRPrefix(lastPartLower) {
+				continue
+			}
+			if def, ok := g.Definitions[lastPart]; ok && def.Kind == "primitive-type" {
+				continue
+			}
+			if def, ok := g.Definitions[lastPartLower]; ok && def.Kind == "primitive-type" {
+				continue
+			}
+		}
 
 		if strings.HasPrefix(lastPart, "_") || lastPart == "extension" || lastPart == "modifierExtension" {
 			continue
@@ -130,12 +213,27 @@ func (g *Generator) ProcessElements(name string, elements []ElementDefinition) m
 			continue
 		}
 
+		if isPrimitiveType && len(el.Type) > 0 {
+			fhirType := el.Type[0].Code
+			if def, ok := g.Definitions[fhirType]; ok && def.Kind == "primitive-type" {
+				continue
+			}
+		}
+
 		goType := g.mapGoType(el)
 
 		if len(el.Type) > 0 &&
 			(el.Type[0].Code == "BackboneElement" || el.Type[0].Code == "Element") {
 			nestedStructName := g.deriveNestedTypeName(el.Path)
 			if nestedStructName != "" {
+				if isPrimitiveType {
+					if def, ok := g.Definitions[nestedStructName]; ok && def.Kind == "primitive-type" {
+						continue
+					}
+					if needsFHIRPrefix(nestedStructName) {
+						continue
+					}
+				}
 				if _, exists := structs[nestedStructName]; !exists {
 					structs[nestedStructName] = []FieldInfo{}
 				}

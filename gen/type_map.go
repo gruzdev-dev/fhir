@@ -88,3 +88,30 @@ func (g *Generator) deriveNestedTypeName(path string) string {
 	}
 	return strings.Join(parts, "")
 }
+
+func needsFHIRPrefix(name string) bool {
+	switch name {
+	case "string", "bool", "int", "int64", "float64",
+		"uri", "code", "id", "markdown", "canonical", "url", "base64Binary", "oid", "xhtml",
+		"boolean", "integer", "unsignedInt", "positiveInt", "integer64", "decimal":
+		return true
+	}
+	return false
+}
+
+func getFHIRTypeName(name string) string {
+	switch name {
+	case "string", "uri", "code", "id", "markdown", "canonical", "url", "base64Binary", "oid", "xhtml":
+		return "FHIRString"
+	case "boolean":
+		return "FHIRBoolean"
+	case "integer", "unsignedInt", "positiveInt":
+		return "FHIRInteger"
+	case "integer64":
+		return "FHIRInteger64"
+	case "decimal":
+		return "FHIRDecimal"
+	default:
+		return name
+	}
+}

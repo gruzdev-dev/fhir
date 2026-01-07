@@ -274,7 +274,7 @@ func TestWriteResource_Imports(t *testing.T) {
 			}
 
 			g := NewGenerator("", "")
-			structMap := g.ProcessElements("TestResource", def.Snapshot.Element)
+			structMap := g.ProcessElements("TestResource", def.Snapshot.Element, def)
 
 			var buf bytes.Buffer
 			fmt.Fprintf(&buf, "package models\n\n")
