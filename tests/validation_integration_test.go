@@ -57,24 +57,24 @@ func TestValidation_RequiredFields(t *testing.T) {
 	testCases := []ValidationTestCase{
 		{
 			Name:    "valid data",
-			Data:    `&SimpleTestResource{RequiredField: "value", RequiredArray: []string{"item1", "item2"}}`,
+			Data:    `&SimpleTestResource{ResourceType: "SimpleTestResource", RequiredField: "value", RequiredArray: []string{"item1", "item2"}}`,
 			WantErr: false,
 		},
 		{
 			Name:    "missing required field",
-			Data:    `&SimpleTestResource{RequiredArray: []string{"item1", "item2"}}`,
+			Data:    `&SimpleTestResource{ResourceType: "SimpleTestResource", RequiredArray: []string{"item1", "item2"}}`,
 			WantErr: true,
 			ErrMsg:  "field 'RequiredField' is required",
 		},
 		{
 			Name:    "missing required array",
-			Data:    `&SimpleTestResource{RequiredField: "value"}`,
+			Data:    `&SimpleTestResource{ResourceType: "SimpleTestResource", RequiredField: "value"}`,
 			WantErr: true,
 			ErrMsg:  "field 'RequiredArray' must have at least",
 		},
 		{
 			Name:    "required array too short",
-			Data:    `&SimpleTestResource{RequiredField: "value", RequiredArray: []string{"item1"}}`,
+			Data:    `&SimpleTestResource{ResourceType: "SimpleTestResource", RequiredField: "value", RequiredArray: []string{"item1"}}`,
 			WantErr: true,
 			ErrMsg:  "field 'RequiredArray' must have at least 2 elements",
 		},

@@ -22,6 +22,20 @@ func (g *Generator) WriteResource(def StructureDefinition) error {
 
 	structMap := g.ProcessElements(actualName, def.Snapshot.Element, def)
 
+	if def.Kind == "resource" {
+		resourceTypeField := FieldInfo{
+			Name:       "ResourceType",
+			GoType:     "string",
+			JSONTag:    "`json:\"resourceType\"`",
+			BSONTag:    "`bson:\"resource_type\"`",
+			Comment:    "Type of resource",
+			Min:        1,
+			IsRequired: true,
+			Path:       actualName + ".resourceType",
+		}
+		structMap[actualName] = append([]FieldInfo{resourceTypeField}, structMap[actualName]...)
+	}
+
 	needsJSON := false
 	needsRegexp := false
 	needsFmt := g.needsFmt(structMap)
@@ -281,6 +295,13 @@ func (g *Generator) writeValidateMethod(buf *bytes.Buffer, structName string, fi
 	emptyStringDeclared := false
 
 	for _, f := range fields {
+		if f.Name == "ResourceType" && f.GoType == "string" {
+			fmt.Fprintf(buf, "\tif r.ResourceType != \"%s\" {\n", structName)
+			fmt.Fprintf(buf, "\t\treturn fmt.Errorf(\"invalid resourceType: expected '%s', got '%%s'\", r.ResourceType)\n", structName)
+			fmt.Fprintf(buf, "\t}\n")
+			continue
+		}
+
 		baseType := extractBaseType(f.GoType)
 		isArray := strings.HasPrefix(f.GoType, "[]")
 		isPointer := strings.HasPrefix(f.GoType, "*")
@@ -300,7 +321,8 @@ func (g *Generator) writeValidateMethod(buf *bytes.Buffer, structName string, fi
 				fmt.Fprintf(buf, "\t\treturn fmt.Errorf(\"field '%s' is required\")\n", f.Name)
 				fmt.Fprintf(buf, "\t}\n")
 			} else if isBuiltin {
-				if baseType == "string" {
+				switch baseType {
+				case "string":
 					if isPointer {
 						fmt.Fprintf(buf, "\tif r.%s == nil || *r.%s == \"\" {\n", f.Name, f.Name)
 						fmt.Fprintf(buf, "\t\treturn fmt.Errorf(\"field '%s' is required\")\n", f.Name)
@@ -314,8 +336,8 @@ func (g *Generator) writeValidateMethod(buf *bytes.Buffer, structName string, fi
 						fmt.Fprintf(buf, "\t\treturn fmt.Errorf(\"field '%s' is required\")\n", f.Name)
 						fmt.Fprintf(buf, "\t}\n")
 					}
-				} else if baseType == "bool" {
-				} else {
+				case "bool":
+				default:
 					if isPointer {
 						fmt.Fprintf(buf, "\tif r.%s == nil {\n", f.Name)
 						fmt.Fprintf(buf, "\t\treturn fmt.Errorf(\"field '%s' is required\")\n", f.Name)
